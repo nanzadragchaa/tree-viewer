@@ -1,0 +1,151 @@
+<html>
+<meta charset="utf-8">
+<title>Syntactic Tree Viewer</title>
+
+<link rel="stylesheet" type="text/css" href="tree-viewer.css"/>
+<!-- General stylesheet -->
+<link rel="stylesheet" href="bootstrap.min.css"/>
+<script src="popper.min.js"></script>
+<script src="jquery-3.2.1.slim.min.js"></script>
+<script src="bootstrap.min.js"></script>
+<script src="d3.v3.min.js"></script>
+<script src="parser.js"></script>
+<script src="d3Tree.js"></script>
+<script type="text/javascript">
+var defaultPTBText = "(S (NP-SBJ (NP (NNP Pierre) (NNP Vinken) ) (, ,) (ADJP (NP (CD 61) (NNS years) ) (JJ old) ) (, ,) ) (VP (MD will) (VP (VB join) (NP (DT the) (NN board) ) (PP-CLR (IN as) (NP (DT a) (JJ nonexecutive) (NN director) )) (NP-TMP (NNP Nov.) (CD 29) ))) (. .) )";
+
+var sentences=[];
+
+function onSub() {
+
+	var textArea = document.getElementById("text");
+	textArea.style.color = "black";
+	// Reset the colour
+	var data = textArea.value;
+	// Escape backslashes
+	data = data.replace(/\\/g, "\\\\");
+	// Parse the string into JSON (defined in parser.js)
+	var jsonData = parse(data);
+	var sentenceString = "";
+	sentenceString = getYield(jsonData, sentenceString);
+	// Add the sentence (yield of the JSON tree) to the sentence container
+	document.getElementById("sentence-container").innerHTML = "<p>"+sentenceString+"</p>";
+	d3Tree(jsonData);
+	return false;
+}
+
+function getYield(node, string){
+	if (node.children == null) string = string.concat(node.name, " ");
+	else {
+		for (var i in node.children) {
+			var child = node.children[i];
+			string = getYield(child, string);
+		}
+	}
+	return string;
+}
+
+function loadTextArea(type) {
+	var textArea = document.getElementById("text");
+	textArea.style.color = "black";
+	if (type == "PTB") textArea.value = defaultPTBText;
+}
+
+window.onload = function() {
+	var textArea = document.getElementById("text");
+	textArea.onfocus = function() {
+		textArea.style.color = "black";
+		if (textArea.value == "Enter your tree here...")
+			textArea.value = "";
+	};
+	textArea.onblur = function() {
+		if (textArea.value == "") {
+			textArea.style.color = "grey";
+			textArea.value = "Enter your tree here...";
+		}
+	}
+}
+
+var openFile = function(event) {
+        var input = event.target;
+        var reader = new FileReader();
+        reader.onload = function(){
+          sentences = sentenceSplit(reader.result);
+					var list = document.getElementById("sentenceList");
+					var len = sentences.length;
+
+					if(len>0){
+						var elements = document.getElementsByClassName("sentence");
+						var ll = elements.length;
+
+						for(let i = 0; i < ll; i++){
+							elements[0].remove();
+						}
+					}
+
+					for(let i = 0; i < len; i++){
+						var data = sentences[i];
+						try{
+
+							var jsonData = parse(data);
+							var sentenceString = "";
+							var sentenceString = getYield(jsonData, sentenceString);
+							var elem = document.createElement("a");
+							var tn = document.createTextNode(sentenceString);
+							elem.setAttribute("href", "javascript:listSelect("+i+");");
+							elem.setAttribute("class", "list-group-item list-group-item-action sentence");
+
+							elem.appendChild(tn);
+							list.appendChild(elem);
+						}catch(err){
+							alert(err.message+" "+data);
+						}
+					}
+
+        };
+        reader.readAsText(input.files[0]);
+      }
+
+			var listSelect = function(idx){
+				var textArea = document.getElementById("text");
+				textArea.value = sentences[idx];
+				onSub();
+			}
+
+</script>
+<body>
+	<div class="row">
+	<div class="col-3">
+		<div style="margin:15px; overflow-y:scroll; height:850px;">
+		<div class="list-group" id="sentenceList">
+							<input type="file" id="upload" style="display:none" onchange='openFile(event)' accept=".tbf">
+		<a href="javascript:void(0);" onclick="document.getElementById('upload').click()" class="list-group-item list-group-item-action active">
+			file open
+	  </a>
+	</div>
+</div>
+</div>
+	<div class="col-9">
+<div class="wrapper">
+	<div id="info">
+		<h3>Syntactic Tree Viewer</h3>
+		This is a <a href="http://d3js.org/">d3.js</a>-based tree viewer that allows you to expand and collapse tree nodes and pan/zoom to different areas of the tree.
+		Input the bracketed tree that you want to view in the box above and press "View Tree". The viewer has been designed to work with <a href="#" onclick="loadTextArea('PTB');">Penn Treebank (.mrg)</a> style trees. <br/>(Click on the links to try an example)
+	</div>
+	<div style="text-align: center;">
+    <div id="tree-container1"></div>
+	<div id="sentence-container"></div>
+	<div id="input-text">
+		<!--Initialise the default text with grey -->
+		<textarea id="text" rows="5" style="color: grey;">Enter your tree here...</textarea>
+	</div>
+	<br/>
+	<div id="input-submit">
+			<input type="submit" id="submit-button" value="View Tree" onclick="return onSub();" />
+	</div>
+	</div>
+	</div>
+	</div>
+</div>
+</body>
+</html>
