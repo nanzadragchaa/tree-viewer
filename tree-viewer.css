@@ -5,18 +5,18 @@
 .overlay {
 	background-color: #eed;
 }
-   
+
 .node rect {
 	fill: #fff;
 	stroke: darkorange;
 	stroke-width: 1.5px;
 }
-   
+
 .node text {
 	font-size: 10px;
 	font-family: serif;
 }
-   
+
 .link {
 	fill: none;
 	stroke: #ccc;
@@ -27,7 +27,7 @@
 	width: 80%;
 }
 
-#submit-button {
+.submit-button {
 	cursor: pointer;
 	border: 0;
 	color: white;

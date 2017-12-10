@@ -11,13 +11,15 @@
 <script src="d3.v3.min.js"></script>
 <script src="parser.js"></script>
 <script src="d3Tree.js"></script>
+<script src="FileSaver.js"></script>
 <script type="text/javascript">
 var defaultPTBText = "(S (NP-SBJ (NP (NNP Pierre) (NNP Vinken) ) (, ,) (ADJP (NP (CD 61) (NNS years) ) (JJ old) ) (, ,) ) (VP (MD will) (VP (VB join) (NP (DT the) (NN board) ) (PP-CLR (IN as) (NP (DT a) (JJ nonexecutive) (NN director) )) (NP-TMP (NNP Nov.) (CD 29) ))) (. .) )";
+
+var currentIDX = -1;
 
 var sentences=[];
 
 function onSub() {
-
 	var textArea = document.getElementById("text");
 	textArea.style.color = "black";
 	// Reset the colour
@@ -70,6 +72,9 @@ var openFile = function(event) {
         var input = event.target;
         var reader = new FileReader();
         reader.onload = function(){
+
+
+
           sentences = sentenceSplit(reader.result);
 					var list = document.getElementById("sentenceList");
 					var len = sentences.length;
@@ -82,6 +87,8 @@ var openFile = function(event) {
 							elements[0].remove();
 						}
 					}
+
+					currentIDX = -1;
 
 					for(let i = 0; i < len; i++){
 						var data = sentences[i];
@@ -109,8 +116,29 @@ var openFile = function(event) {
 			var listSelect = function(idx){
 				var textArea = document.getElementById("text");
 				textArea.value = sentences[idx];
+
+				currentIDX = idx;
+
 				onSub();
 			}
+
+			var saveFile = function(){
+				let data = "";
+				let len = sentences.length;
+
+				for(let i = 0; i < len; i++){
+					 data += sentences[i]+"\r\n";
+				}
+				var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
+			  saveAs(blob, "tokes.tbf");
+			}
+
+var saveText = function(){
+	if(currentIDX>=0){
+		var textArea = document.getElementById("text");
+		sentences[currentIDX] = textArea.value;
+	}
+}
 
 </script>
 <body>
@@ -141,7 +169,9 @@ var openFile = function(event) {
 	</div>
 	<br/>
 	<div id="input-submit">
-			<input type="submit" id="submit-button" value="View Tree" onclick="return onSub();" />
+			<input type="submit" class="submit-button" value="View Tree" onclick="return onSub();" />
+      <input type="submit" class="submit-button" value="Save text" onclick="return saveText();" />
+			<input type="submit" class="submit-button" value="Save File" onclick="return saveFile();" />
 	</div>
 	</div>
 	</div>
